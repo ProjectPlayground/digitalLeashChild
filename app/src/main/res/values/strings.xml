@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">DigitalLeashChild</string>
+    <string name="app_name">Digital Leash Child</string>
+
+    <string name="parent_name">Parent's Name</string>
 </resources>
