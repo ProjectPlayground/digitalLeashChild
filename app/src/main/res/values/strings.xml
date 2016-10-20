@@ -1,5 +1,11 @@
 <resources>
-    <string name="app_name">Digital Leash Child</string>
 
-    <string name="parent_name">Parent's Name</string>
+    <string name="app_name">Digital Leash Child</string>
+    <string name="parent_name">Parent\'s Name</string>
+    <string name="demo_name">John Tucker</string>
+    <string name="reporting">Your location is now</string>
+    <string name="reporting2">being reported!</string>
+    <string name="done">DONE</string>
+    <string name="report_location">REPORT LOCATION</string>
+
 </resources>
