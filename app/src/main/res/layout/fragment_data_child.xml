@@ -4,12 +4,15 @@
     android:layout_height="match_parent"
     android:background="@drawable/child_background"
     tools:context="layout.FragmentDataChild">
-
     <!-- TODO: Update blank fragment layout -->
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginRight="70dp"
+        android:layout_marginBottom="40dp"
+        android:layout_marginLeft="70dp"
+        android:layout_marginTop="50dp"
         android:orientation="vertical"
         android:gravity="center_horizontal">
 
@@ -20,38 +23,34 @@
             android:layout_gravity="center_horizontal"
             android:text="@string/parent_name"
             android:textColor="@color/textColor"
-            android:textAppearance="?android:textAppearanceLarge"
+            android:textAppearance="?android:textAppearanceMedium"
             android:textStyle="italic"
-            android:gravity="center"
-            android:layout_marginBottom="@dimen/edit_text_bottom_margin"
+            android:layout_marginBottom="5dp"
             />
 
         <EditText
             android:id="@+id/edit1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/textEditFieldColor"
+            android:background="@drawable/edit_text_rounded"
             android:hint="@string/demo_name"
             android:textAppearance="?android:textAppearanceLarge"
             android:textColor="@color/textColor"
             android:textColorHint="@color/textColor"
-            android:gravity="center"
-            android:layout_marginBottom="@dimen/edit_text_bottom_margin"
+            android:layout_marginBottom="70dp"
             android:padding="10dp"
-            android:layout_marginRight="@dimen/edit_text_paddingRight"
-            android:layout_marginLeft="@dimen/edit_text_paddingLeft"
 
             />
 
         <Button
-            android:id="@+id/buttonGoodChild"
-            android:layout_width="230dp"
+            android:id="@+id/buttonDone"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:textAppearanceMedium"
             android:textStyle="bold|italic"
+            android:textColor="#000000"
             android:background="@drawable/button_rounded_white"
             android:text="@string/report_location"
-            android:gravity="center"
             android:onClick="onClickDone"
 
             />
