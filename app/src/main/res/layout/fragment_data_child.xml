@@ -26,6 +26,7 @@
             android:textAppearance="?android:textAppearanceMedium"
             android:textStyle="italic"
             android:layout_marginBottom="5dp"
+            android:layout_marginTop="75dp"
             />
 
         <EditText
@@ -43,7 +44,7 @@
             />
 
         <Button
-            android:id="@+id/buttonDone"
+            android:id="@+id/button_report_location"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:textAppearanceMedium"

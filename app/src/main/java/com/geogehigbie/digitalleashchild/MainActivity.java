@@ -1,29 +1,33 @@
 package com.geogehigbie.digitalleashchild;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import javax.xml.datatype.Duration;
-
 import layout.FragmentDataChild;
 
-public class MainActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener{
+public class MainActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     private FragmentManager fragmentManager;
     private FragmentTransaction fragmentTransaction;
@@ -35,6 +39,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private String lastLongitudeString;
     private String lastLatitudeString;
 
+    private Location location;
     private TextView output;
 
     private String reportingString = "Your location is being reported as: ";
@@ -42,20 +47,32 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private Handler handler1;
     private Runnable runnable1;
 
+    private double longitude;
+    private double latitude;
+
+    private String locationCoordinatesString;
+
+    //permission checking variables
+    private final static int DISTANCE_UPDATES = 1;
+    private final static int TIME_UPDATES = 1;
+    private static final int PERMISSION_REQUEST_CODE = 1;
+    private boolean LocationAvailable;
+
+    //some udacity suggestions
+//    LocationRequest locationRequest;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         loadFirstFragment();
 
-        createGoogleAPIClient();
 
     }
 
 
-    public void loadFirstFragment(){
+    public void loadFirstFragment() {
         fragmentManager = getSupportFragmentManager();
         fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.add(R.id.fragmentContainer, new FragmentDataChild());
@@ -64,94 +81,129 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
 
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        client.connect();
-    }
-
-    @Override
-    protected void onStop() {
-
-        client.disconnect();
-
-        super.onStop();
-    }
-
-    //used to get last location - might not use this in this app;
     @Override
     public void onConnected(Bundle connectionHint) {
 
-        //used to get last location - might not use this in this app;
-        lastLocation = LocationServices.FusedLocationApi.getLastLocation(client);
-        if (lastLocation != null) {
+        checkPermissionsAndGetLocation();
+    }
+
+
+    public void checkPermissionsAndGetLocation(){
+
+        int permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+
+            //get location and last known location
+            getLocation();
+
+//            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+//                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                // Show an expanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+            } else {
+
+                // Requests the user permission
+
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 99);
+
+            }
+        }
+
+    public void getLocation(){
+        locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        locationRequest = locationRequest.create();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(1000);
+
+      //  LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, this);
+
+        lastLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+        if(lastLocation != null){
             lastLatitudeString = String.valueOf(lastLocation.getLatitude());
             lastLongitudeString = String.valueOf(lastLocation.getLongitude());
         }
 
-        LocationRequest request = new LocationRequest();
-        request.setPriority(1);
+        Log.i("LAT", "getLocation: " + lastLatitudeString );
+        Log.i("LONG", "getLocation: " + lastLongitudeString);
+
+//        lastLocation = LocationServices.FusedLocationApi.getLastLocation(client);
+//        if (lastLocation != null) {
+//            lastLatitudeString = String.valueOf(lastLocation.getLatitude());
+//            lastLongitudeString = String.valueOf(lastLocation.getLongitude());
+//        }
+
+        int count;
 
         handler1 = new Handler();
-        runnable1 = new Runnable(){
+        runnable1 = new Runnable() {
             @Override
-            public void run(){
-
+            public void run() {
+                getLocation();
             }
         };
-        handler1.postDelayed(runnable1, 1000);
-
+        handler1.postDelayed(runnable1, 10000);
     }
 
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 99: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-    public void createGoogleAPIClient(){
-       client = new GoogleApiClient.Builder(this)
-               .addApi(LocationServices.API)
-               .addConnectionCallbacks(this)
-               .addOnConnectionFailedListener(this)
-               .build();
+                    getLocation();
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
+        }
     }
 
-    public void onClickReportLocation(){
-        String location = "SOMEWHERE";
-        reportingString = reportingString + location;
+    public void onClickReportLocation(View view){
+
+        checkPermissionsAndGetLocation();
+
+        showLocationUpdateToast();
+
+
+    }
+
+    public void showLocationUpdateToast(){
+        String locationCoordinatesString = lastLongitudeString + " Longitude and " + lastLatitudeString + " Latitude";
+        reportingString = reportingString + locationCoordinatesString;
 
         Toast toast = Toast.makeText(this, reportingString, Toast.LENGTH_LONG);
         toast.show();
 
-        constantlyReportLocation();
-
-    }
-
-    public void checkLocation(){
-        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
-        Location location = (Location) locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-
-
-    }
-
-    public void constantlyReportLocation(){
-
-        if ( ContextCompat.checkSelfPermission( this, android.Manifest.permission.ACCESS_COARSE_LOCATION ) != PackageManager.PERMISSION_GRANTED ) {
-
-            ActivityCompat.requestPermissions( this, new String[] {  android.Manifest.permission.ACCESS_COARSE_LOCATION  },
-                    LocationService.MY_PERMISSION_ACCESS_COURSE_LOCATION );
-        }
-        //going to have handler here
-
     }
 
 
+    @Override
+    public void onConnectionSuspended(int i) {
+        Toast toast = Toast.makeText(this, "The connection was suspended.", Toast.LENGTH_LONG);
+        toast.show();
+    }
 
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Toast toast = Toast.makeText(this, "The connection failed.", Toast.LENGTH_LONG);
+        toast.show();
+    }
 
+    @Override
+    public void onLocationChanged(Location location) {
 
-
-
-
-
-
+    }
 }
