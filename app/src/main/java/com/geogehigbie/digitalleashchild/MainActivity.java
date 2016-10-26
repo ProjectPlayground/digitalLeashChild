@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -17,6 +18,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -68,8 +75,11 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
     private String parentUserName;
 
-    //some udacity suggestions
-//    LocationRequest locationRequest;
+    private String URLString;
+
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,11 +102,11 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     @Override
     public void onConnected(Bundle connectionHint) {
 
-      //  checkPermissionsAndGetLocation();
+        //  checkPermissionsAndGetLocation();
     }
 
 
-    public void checkPermissionsAndGetLocation(){
+    public void checkPermissionsAndGetLocation() {
 
         int permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
         if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
@@ -105,37 +115,37 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
 //            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
 //                    android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-                // Show an expanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
+            // Show an expanation to the user *asynchronously* -- don't block
+            // this thread waiting for the user's response! After the user
+            // sees the explanation, try again to request the permission.
 
-            } else {
+        } else {
 
-                // Requests the user permission
+            // Requests the user permission
 
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 99);
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 99);
 
-            }
         }
+    }
 
-    public void getLocation(){
+    public void getLocation() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         locationRequest = locationRequest.create();
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
         locationRequest.setInterval(1000);
 
-      //  LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, this);
+        //  LocationServices.FusedLocationApi.requestLocationUpdates(client, locationRequest, this);
 
         lastLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        if(lastLocation != null){
+        if (lastLocation != null) {
             latitude = lastLocation.getLatitude();
             longitude = lastLocation.getLongitude();
             lastLatitudeString = String.valueOf(lastLocation.getLatitude());
             lastLongitudeString = String.valueOf(lastLocation.getLongitude());
         }
 
-        Log.i("LAT", "getLocation: " + lastLatitudeString );
+        Log.i("LAT", "getLocation: " + lastLatitudeString);
         Log.i("LONG", "getLocation: " + lastLongitudeString);
 
 
@@ -175,30 +185,12 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         }
     }
 
-    public void getParentUserName(){
+    public void getParentUserName() {
         parentUserName = (String) findViewById(R.id.edit1).toString();
     }
 
-    public String createJSON(){
-        childJSON = new JSONObject();
 
-            try {
-                childJSON.put("username", parentUserName);
-                childJSON.put("radius", radius);
-                childJSON.put("longitude", longitude);
-                childJSON.put("latitude", latitude);
-
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            JSONString = childJSON.toString();
-            return JSONString;
-    }
-
-
-
-    public void onClickReportLocation(View view){
+    public void onClickReportLocation(View view) {
 
         checkPermissionsAndGetLocation();
 
@@ -208,8 +200,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
 
-
-    public void showLocationUpdateToast(){
+    public void showLocationUpdateToast() {
         String locationCoordinatesString = lastLongitudeString + " Longitude and " + lastLatitudeString + " Latitude";
         reportingString = reportingString + locationCoordinatesString;
 
@@ -235,4 +226,96 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     public void onLocationChanged(Location location) {
 
     }
+
+    ///JSON creationa nd HTTP request
+
+    public String createJSON(){
+        childJSON = new JSONObject();
+
+        try {
+            childJSON.put("username", parentUserName);
+            childJSON.put("radius", radius);
+            childJSON.put("longitude", longitude);
+            childJSON.put("latitude", latitude);
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        JSONString = childJSON.toString();
+        return JSONString;
+    }
+
+
+    public String createURL(String userID) {
+        String URLBase = "https://turntotech.firebaseio.com/digitalleash/";
+        userID = userID + ".json";
+
+        URLString = URLBase + userID;
+        return URLString;
+    }
+
+
+    public class SendJSONData extends AsyncTask<Void, Void, String> {
+
+        String JSONString = createJSON();
+        String URLString = createURL(parentUserName);
+
+        @Override
+        protected String doInBackground(Void... params) {
+
+            Log.d("doInBackground", "called");
+
+            try {
+                Log.d("try", "called");
+
+                OkHttpClient client = new OkHttpClient();
+
+                RequestBody postdata = RequestBody.create(JSON, JSONString);
+
+                Request request = new Request.Builder()
+                        .url(URLString)
+                        .addHeader("X-HTTP-Method-Override","PUT")
+                        .post(postdata)
+                        .build();
+
+                Response response = client.newCall(request).execute();
+
+                if (response.isSuccessful()) {
+                    Log.d("response", "isSuccessful");
+                } else {
+                    Log.d("response", response.message());
+
+                }
+
+                String result = response.body().string();
+                return result;
+
+            } catch (Exception e) {
+                Log.d("Exception", e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+        }
+    }
+
+    public void sendJSONData() {
+
+        JSONString = createJSON();
+        URLString = createURL(parentUserName);
+
+        SendJSONData sendJSONData = new SendJSONData();
+        sendJSONData.execute();
+
+    }
 }
+
+
+
+
+
+
