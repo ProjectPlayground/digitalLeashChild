@@ -24,7 +24,12 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import layout.FragmentDataChild;
+
+import static android.R.attr.radius;
 
 public class MainActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
@@ -58,6 +63,11 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private static final int PERMISSION_REQUEST_CODE = 1;
     private boolean LocationAvailable;
 
+    private JSONObject childJSON;
+    private String JSONString;
+
+    private String parentUserName;
+
     //some udacity suggestions
 //    LocationRequest locationRequest;
 
@@ -67,8 +77,6 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         setContentView(R.layout.activity_main);
 
         loadFirstFragment();
-
-
     }
 
 
@@ -84,7 +92,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     @Override
     public void onConnected(Bundle connectionHint) {
 
-        checkPermissionsAndGetLocation();
+      //  checkPermissionsAndGetLocation();
     }
 
 
@@ -93,7 +101,6 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         int permissionCheck = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION);
         if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
 
-            //get location and last known location
             getLocation();
 
 //            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
@@ -122,6 +129,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
         lastLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if(lastLocation != null){
+            latitude = lastLocation.getLatitude();
+            longitude = lastLocation.getLongitude();
             lastLatitudeString = String.valueOf(lastLocation.getLatitude());
             lastLongitudeString = String.valueOf(lastLocation.getLongitude());
         }
@@ -129,19 +138,14 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         Log.i("LAT", "getLocation: " + lastLatitudeString );
         Log.i("LONG", "getLocation: " + lastLongitudeString);
 
-//        lastLocation = LocationServices.FusedLocationApi.getLastLocation(client);
-//        if (lastLocation != null) {
-//            lastLatitudeString = String.valueOf(lastLocation.getLatitude());
-//            lastLongitudeString = String.valueOf(lastLocation.getLongitude());
-//        }
-
-        int count;
 
         handler1 = new Handler();
         runnable1 = new Runnable() {
             @Override
             public void run() {
                 getLocation();
+                createJSON();
+
             }
         };
         handler1.postDelayed(runnable1, 10000);
@@ -171,14 +175,39 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         }
     }
 
+    public void getParentUserName(){
+        parentUserName = (String) findViewById(R.id.edit1).toString();
+    }
+
+    public String createJSON(){
+        childJSON = new JSONObject();
+
+            try {
+                childJSON.put("username", parentUserName);
+                childJSON.put("radius", radius);
+                childJSON.put("longitude", longitude);
+                childJSON.put("latitude", latitude);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            JSONString = childJSON.toString();
+            return JSONString;
+    }
+
+
+
     public void onClickReportLocation(View view){
 
         checkPermissionsAndGetLocation();
 
         showLocationUpdateToast();
 
-
+        getParentUserName();
     }
+
+
 
     public void showLocationUpdateToast(){
         String locationCoordinatesString = lastLongitudeString + " Longitude and " + lastLatitudeString + " Latitude";
