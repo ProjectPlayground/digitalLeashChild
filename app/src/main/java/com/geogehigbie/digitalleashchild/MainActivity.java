@@ -16,6 +16,7 @@ import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -24,6 +25,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -79,7 +81,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-
+    private int radius = 77;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,6 +157,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
             public void run() {
                 getLocation();
                 createJSON();
+                sendJSONData();
 
             }
         };
@@ -186,7 +189,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     }
 
     public void getParentUserName() {
-        parentUserName = (String) findViewById(R.id.edit1).toString();
+        EditText parentUserNameEdit = (EditText) findViewById(R.id.edit1);
+        parentUserName =  parentUserNameEdit.getText().toString();
     }
 
 
@@ -227,7 +231,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
     }
 
-    ///JSON creationa nd HTTP request
+    ///JSON creation and HTTP request
 
     public String createJSON(){
         childJSON = new JSONObject();
@@ -253,6 +257,19 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
         URLString = URLBase + userID;
         return URLString;
+
+    }
+
+
+
+    public void sendJSONData() {
+
+        JSONString = createJSON();
+        URLString = createURL(parentUserName);
+
+        SendJSONData sendJSONData = new SendJSONData();
+        sendJSONData.execute();
+
     }
 
 
@@ -303,15 +320,7 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         }
     }
 
-    public void sendJSONData() {
 
-        JSONString = createJSON();
-        URLString = createURL(parentUserName);
-
-        SendJSONData sendJSONData = new SendJSONData();
-        sendJSONData.execute();
-
-    }
 }
 
 
