@@ -61,8 +61,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
     private Handler handler1;
     private Runnable runnable1;
 
-    private double longitude;
-    private double latitude;
+    private double longitudeChild;
+    private double latitudeChild;
 
     private String locationCoordinatesString;
 
@@ -141,8 +141,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
 
         lastLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         if (lastLocation != null) {
-            latitude = lastLocation.getLatitude();
-            longitude = lastLocation.getLongitude();
+            latitudeChild = lastLocation.getLatitude();
+            longitudeChild = lastLocation.getLongitude();
             lastLatitudeString = String.valueOf(lastLocation.getLatitude());
             lastLongitudeString = String.valueOf(lastLocation.getLongitude());
         }
@@ -239,8 +239,8 @@ public class MainActivity extends FragmentActivity implements GoogleApiClient.Co
         try {
             childJSON.put("username", parentUserName);
             childJSON.put("radius", radius);
-            childJSON.put("longitude", longitude);
-            childJSON.put("latitude", latitude);
+            childJSON.put("child_longitude", longitudeChild);
+            childJSON.put("child_latitude", latitudeChild);
 
         } catch (JSONException e) {
             e.printStackTrace();
